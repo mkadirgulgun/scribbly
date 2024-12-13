@@ -1,0 +1,113 @@
+﻿@model SignUpViewModel
+@{
+    ViewData["Title"] = "Kaydol";
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notlar - Hesap Oluştur</title>
+    <link rel="stylesheet" href="~/css/RegisterStyles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="signup-card">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 12V5.749c0-.221-.078-.435-.22-.609l-2.92-3.565A.751.751 0 0 0 16.171 1H4a1 1 0 0 0-1 1v20a1 1 0 0 0 1 1h3v-2H5V3h10v2a1 1 0 0 0 1 1h2v6h2zm-7 5h8v6h-8v-6zm1 1v1h6v-1h-6zm0 2v1h6v-1h-6z" fill="#4361EE" />
+                </svg>
+                <span>Notlar</span>
+            </div>
+
+            <h1>Hesabınızı Oluşturun</h1>
+            <p class="subtitle">Notlarınızı düzenlemeye başlamak ve verimliliğinizi artırmak için kaydolun.</p>
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-info" role="alert">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <form asp-controller="Home" asp-action="SignUp" method="post" id="signupForm">
+                <div class="form-group">
+                    <label for="Email">E-posta Adresi</label>
+                    <input asp-for="Email" type="email" id="Email" placeholder="email@ornek.com" required>
+                    <span class="text-danger" asp-validation-for="Email"></span>
+                </div>
+                <div class="form-group">
+                    <label for="UserName">Kullanıcı Adı</label>
+                    <input asp-for="UserName" type="text" id="UserName" required>
+                    <span class="text-danger" asp-validation-for="UserName"></span>
+                </div>
+                <div class="form-group">
+                    <label for="Password">Şifre</label>
+                    <div class="password-input">
+                        <input asp-for="Password" type="password" id="Password" required>
+                        <button type="button" class="show-password" data-for="Password" aria-label="Şifre görünürlüğünü değiştir">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 4.37C3.75 4.37 1.25 10 1.25 10C1.25 10 3.75 15.63 10 15.63C16.25 15.63 18.75 10 18.75 10C18.75 10 16.25 4.37 10 4.37Z" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M10 13.13C11.7259 13.13 13.125 11.7309 13.125 10.005C13.125 8.27911 11.7259 6.88 10 6.88C8.27411 6.88 6.875 8.27911 6.875 10.005C6.875 11.7309 8.27411 13.13 10 13.13Z" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="password-hint">En az 8 karakter</div>
+                    <span class="text-danger" asp-validation-for="Password"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="PasswordConfirm">Şifreyi Onaylayın</label>
+                    <div class="password-input">
+                        <input asp-for="PasswordConfirm" type="password" id="PasswordConfirm" required>
+                        <button type="button" class="show-password" data-for="PasswordConfirm" aria-label="Şifre görünürlüğünü değiştir">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 4.37C3.75 4.37 1.25 10 1.25 10C1.25 10 3.75 15.63 10 15.63C16.25 15.63 18.75 10 18.75 10C18.75 10 16.25 4.37 10 4.37Z" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M10 13.13C11.7259 13.13 13.125 11.7309 13.125 10.005C13.125 8.27911 11.7259 6.88 10 6.88C8.27411 6.88 6.875 8.27911 6.875 10.005C6.875 11.7309 8.27411 13.13 10 13.13Z" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                    </div>
+                    <span class="text-danger" asp-validation-for="PasswordConfirm"></span>
+                </div>
+
+                <button type="submit" class="signup-button">Kaydol</button>
+            </form>
+
+            <div class="divider">
+                <span>Ya da bununla kaydolun</span>
+            </div>
+            <form asp-controller="Home" asp-action="GoogleLogin" method="get">
+                <button type="submit" class="google-button">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjIuNTYgMTIuMjVjMC0uNzgtLjA3LTEuNTMtLjItMi4yNUgxMnY0LjI2aDUuOTJjLS4yNiAxLjM3LTEuMDQgMi41My0yLjIxIDMuMzF2Mi43N2gzLjU3YzIuMDgtMS45MiAzLjI4LTQuNzQgMy4yOC04LjA5eiIgZmlsbD0iIzQyODVGNCIvPjxwYXRoIGQ9Ik0xMiAyM2MyLjk3IDAgNS40Ni0uOTggNy4yOC0yLjY2bC0zLjU3LTIuNzdjLS45OC42Ni0yLjIzIDEuMDYtMy43MSAxLjA2LTIuODYgMC01LjI5LTEuOTMtNi4xNi00LjUzSDIuMTh2Mi44NEM0IDIwLjUzIDcuNyAyMyAxMiAyM3oiIGZpbGw9IiMzNEE4NTMiLz48cGF0aCBkPSJNNS44NCAxNC4wOWMtLjIyLS42Ni0uMzUtMS4zNi0uMzUtMi4wOXMuMTMtMS40My4zNS0yLjA5VjcuMDdIMi4xOEMxLjQzIDguNTUgMSAxMC4yMiAxIDEyczQzIDMuNDUgMS4xOCA0LjkzbDIuODUtMi4yMi44MS0uNjJ6IiBmaWxsPSIjRkJCQzA1Ii8+PHBhdGggZD0iTTEyIDUuMzhjMS42MiAwIDMuMDYuNTYgNC4yMSAxLjY0bDMuMTUtMy4xNUMxNy40NSAyLjA5IDE0Ljk3IDEgMTIgMSA3LjcgMSAzLjk5IDMuNDcgMi4xOCA3LjA3bDMuNjYgMi44NGMuODctMi42IDMuMy00LjUzIDYuMTYtNC41M3oiIGZpbGw9IiNFQTQzMzUiLz48L3N2Zz4=" alt="Google logosu">
+                    Google
+                </button>
+            </form>
+            <div class="login-text">
+                Zaten bir hesabınız var mı? <a href="/home/signin">Giriş yapın</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.show-password').forEach(button => {
+                button.addEventListener('click', function () {
+                    const inputId = this.getAttribute('data-for');
+                    const input = document.getElementById(inputId);
+                    const type = input.type === 'password' ? 'text' : 'password';
+                    input.type = type;
+                    this.setAttribute('aria-label', `${type === 'password' ? 'Şifreyi Göster' : 'Şifreyi Gizle'}`);
+                    this.innerHTML = type === 'password' ?
+                        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M10 4.37C3.75 4.37 1.25 10 1.25 10C1.25 10 3.75 15.63 10 15.63C16.25 15.63 18.75 10 18.75 10C18.75 10 16.25 4.37 10 4.37Z" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M10 13.13C11.7259 13.13 13.125 11.7309 13.125 10.005C13.125 8.27911 11.7259 6.88 10 6.88C8.27411 6.88 6.875 8.27911 6.875 10.005C6.875 11.7309 8.27411 13.13 10 13.13Z" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>` :
+                        `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M2.5 10C2.5 10 5 5 10 5C15 5 17.5 10 17.5 10C17.5 10 15 15 10 15C5 15 2.5 10 2.5 10Z" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M3 3L17 17" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>`;
+                });
+            });
+        });
+    </script>
+</body>
+</html>

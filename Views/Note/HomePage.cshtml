@@ -1,0 +1,538 @@
+﻿@model HomePageViewModel
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scribbly</title>
+    <link rel="stylesheet" href="~/css/homePage.css">
+    <style>
+        .icon {
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        .nav-item .icon {
+            opacity: 0.7;
+        }
+
+        .nav-item:hover .icon {
+            opacity: 1;
+        }
+
+        .tag .icon {
+            margin-right: 4px;
+        }
+
+        .note-item {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .search-bar {
+            margin-bottom: 10px;
+        }
+
+        .search-button {
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="pencil-icon">✏️</div>
+            <span class="logo-text">Scribbly</span>
+        </div>
+        <a href="/notes" class="nav-item active">
+            <img src="~/img/home.png" alt="Ana Sayfa" class="icon" /> Tüm Notlar
+        </a>
+        <a href="/archive" class="nav-item ">
+            <img src="~/img/save-file.png" alt="Arşiv" class="icon" /> Arşivlenmiş Notlar
+        </a>
+        <div class="tags-section">
+            <div class="tags-title">Etiketler</div>
+            @foreach (var tag in Model.UniqueTags)
+            {
+                <a href="#" class="nav-item">
+                    <img src="~/img/tag.png" alt="Etiket" class="icon" /> @tag.Name
+                </a>
+            }
+        </div>
+    </aside>
+    <main class="main-content">
+        <header class="header">
+            <form asp-controller="Note" asp-action="Search" method="get" class="search-bar">
+                <span>🔍</span>
+                <input type="text" name="searchTerm" class="search-input" placeholder="Başlığa, içeriğe veya etiketlere göre ara...">
+                <button type="submit" class="search-button">Ara</button>
+            </form>
+            <div class="user-profile-dropdown">
+                <button class="user-profile-button">
+                    <span class="user-name">@User.Identity.Name</span>
+                </button>
+                <div class="dropdown-content">
+                    <a asp-controller="User" asp-action="Logout" class="dropdown-item">Çıkış Yap</a>
+                </div>
+            </div>
+        </header>
+        <div class="notes-container">
+            <div class="notes-list">
+                <button class="create-note-btn">+ Yeni Not Oluştur</button>
+                @foreach (var note in Model.Notes)
+                {
+                    <div class="note-item" data-note="@note.Id">
+                        <div class="note-title">@note.Title</div>
+                        <div class="note-meta">
+                            <div class="note-tags">
+                                @foreach (var tag in note.NoteTags)
+                                {
+                                    <span class="tag">
+                                        <img src="~/img/tag.png" alt="Etiket" class="icon" /> @tag.Tag.Name
+                                    </span>
+                                }
+                            </div>
+                            <div class="note-date">@note.UpdatedTime.ToString("dd MMM yyyy")</div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Yeni not için boş durum -->
+            <form id="addNoteForm" asp-controller="Note" asp-action="AddNote" method="post" >
+                <div class="blank-state">
+                    <input type="hidden" name="returnUrl" value="HomePage"/>
+                    <input type="text" class="title-input" name="Title" placeholder="Başlık girin..." required>
+                    <div class="meta-info">
+                        <div class="meta-info-item">
+                            <span class="meta-info-label">
+                                <img src="~/img/tag.png" alt="Etiket" class="icon" />Etiketler
+                            </span>
+                            <input type="text" name="Tags" class="tags-input" placeholder="Virgülle ayrılmış etiketler ekleyin (ör. İş, Planlama)">
+                        </div>
+                        <div class="meta-info-item">
+                            <span class="meta-info-label">
+                                🕒 Son düzenleme
+                            </span>
+                            <span class="edit-time">Henüz kaydedilmedi</span>
+                        </div>
+                    </div>
+                    <div id="noteDetail" class="content-area" contenteditable="true" placeholder="Notunuzu yazmaya başlayın..."></div>
+                    <input type="hidden" name="Detail" id="hiddenDetail">
+                    <div class="footer-buttons">
+                        <button type="submit" class="footer-button save-button" disabled>Notu Kaydet</button>
+                        <button type="button" class="footer-button cancel-button">İptal</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Not içeriği görünümü -->
+            <div class="note-content">
+                @foreach (var note in Model.Notes)
+                {
+                    <div class="note-view" data-note="@note.Id">
+                        <div class="action-buttons">
+                            <button class="action-button" onclick="showArchiveModal('@note.Id')">
+                                <img src="~/img/save-file.png" alt="Notu Arşivle" class="icon" /> Notu Arşivle
+                            </button>
+                            <button class="action-button delete" onclick="showDeleteModal('@note.Id')">
+                                <img src="~/img/recycle-bin.png" alt="Sil" class="icon" /> Notu Sil
+                            </button>
+                        </div>
+                        <form asp-controller="Note" asp-action="UpdateNote" method="post">
+                            <input type="hidden" name="returnUrl" value="HomePage" />
+                            <input type="hidden" name="Id" value="@note.Id" />
+                            <input type="hidden" name="Title" />
+                            <input type="hidden" name="Detail" />
+                            <input type="hidden" name="Tags" />
+                            <div class="content-header">
+                                <h1 class="content-title" contenteditable="true">@note.Title</h1>
+                                <div class="content-meta">
+                                    <div class="content-meta-item">
+                                        <span>Etiketler:</span>
+                                        <div class="note-tags">
+                                            <p>@ViewData["FailMessage"]</p>
+                                            @foreach (var tag in note.NoteTags)
+                                            {
+                                                <span class="tag" data-tag-name="@tag.Tag.Name"><img src="~/img/tag.png" alt="Etiket" class="icon" /> @tag.Tag.Name<span class="remove-tag">❌</span></span>
+                                            }
+                                        </div>
+                                        <input type="text" class="add-tag-input" placeholder="Yeni etiket ekle...">
+                                    </div>
+                                </div>
+                                <div class="content-meta-item">
+                                    <span>Son düzenleme:</span>
+                                    <span class="update-date">@note.UpdatedTime.ToString("dd MMM yyyy")</span>
+                                </div>
+                            </div>
+                            <div class="note-text" contenteditable="true">
+                                @Html.Raw(note.Detail)
+                            </div>
+                            <div class="footer-buttons">
+                                <button type="submit" class="footer-button save-button" disabled>Değişiklikleri Kaydet</button>
+                                <button type="button" class="footer-button cancel-button">İptal</button>
+                            </div>
+                        </form>
+                    </div>
+                }
+            </div>
+
+        </div>
+    </main>
+    @foreach (var note in Model.Notes)
+    {
+        <div class="modal-overlay" id="archiveModal@(note.Id)">
+            <div class="modal">
+                <div class="modal-title">
+                    <span><img src="~/img/save-file.png" alt="Arşivle" class="icon" /></span>
+                    Notu Geri Yükle
+                </div>
+                <div class="modal-description">
+                    Bu notu arşivlemek istediğinizden emin misiniz? Notu Arşivlenmiş Notlar bölümünde bulabilirsiniz.
+                </div>
+                <form asp-controller="Note" asp-action="ArchiveNote" method="post">
+                    <input type="hidden" name="returnUrl" value="HomePage" />
+                    <input type="hidden" name="id" value="@note.Id" />
+                    <div class="modal-buttons">
+                        <button type="button" class="modal-button cancel" onclick="closeModal('archiveModal@(note.Id)')">İptal</button>
+                        <button type="submit" class="modal-button archive">Notu Arşivle</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="modal-overlay" id="deleteModal@(note.Id)">
+            <div class="modal">
+                <div class="modal-title">
+                    <span><img src="~/img/recycle-bin.png" alt="Sil" class="icon" /></span>
+                    Notu Sil
+                </div>
+                <div class="modal-description">
+                    Bu notu kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                </div>
+                <form asp-controller="Note" asp-action="DeleteNote" method="post">
+                    <input type="hidden" name="returnUrl" value="HomePage" />
+                    <input type="hidden" name="id" value="@note.Id" />
+                    <div class="modal-buttons">
+                        <button type="button" class="modal-button cancel" onclick="closeModal('deleteModal@(note.Id)')">İptal</button>
+                        <button type="submit" class="modal-button delete">Notu Sil</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Function to show modal
+            window.showModal = function (modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = 'flex';
+                }
+            };
+
+            // Function to close modal
+            window.closeModal = function (modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            };
+            // Add new function for tag filtering
+            function setupTagFiltering() {
+                const tagLinks = document.querySelectorAll('.tags-section .nav-item');
+                let activeTag = null;
+
+                tagLinks.forEach(tagLink => {
+                    tagLink.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const tagName = this.textContent.trim().replace(/^.*\s/, ''); // Remove everything before the last space
+
+                        if (activeTag === tagName) {
+                            showAllNotes();
+                            activeTag = null;
+                            this.classList.remove('active');
+                        } else {
+                            filterNotesByTag(tagName);
+                            if (activeTag) {
+                                document.querySelector(`.nav-item.active`).classList.remove('active');
+                            }
+                            activeTag = tagName;
+                            this.classList.add('active');
+                        }
+                    });
+                });
+            }
+
+            function showAllNotes() {
+                document.querySelectorAll('.note-item').forEach(note => {
+                    note.style.display = 'block';
+                });
+            }
+
+            function filterNotesByTag(tagName) {
+                document.querySelectorAll('.note-item').forEach(note => {
+                    const noteTags = note.querySelectorAll('.note-tags .tag');
+                    const hasTag = Array.from(noteTags).some(tag => tag.textContent.trim().includes(tagName));
+                    note.style.display = hasTag ? 'block' : 'none';
+                });
+            }
+
+            // Call the setup function
+            setupTagFiltering();
+            // Function to display note content
+            function displayNoteContent(noteId) {
+                viewNoteDetails(noteId);
+            }
+
+            // Add these new functions
+            window.showArchiveModal = function (noteId) {
+                showModal(`archiveModal${noteId}`);
+            };
+
+            window.showDeleteModal = function (noteId) {
+                showModal(`deleteModal${noteId}`);
+            };
+
+            // Add this new function for handling note edits
+            function handleNoteEdit() {
+                const noteViews = document.querySelectorAll('.note-view');
+                noteViews.forEach(view => {
+                    const form = view.querySelector('form');
+                    const titleElement = view.querySelector('.content-title');
+                    const textElement = view.querySelector('.note-text');
+                    const saveButton = view.querySelector('.save-button');
+                    const cancelButton = view.querySelector('.cancel-button');
+                    const tagsContainer = view.querySelector('.note-tags');
+                    const addTagInput = view.querySelector('.add-tag-input');
+
+                    let originalTitle, originalText, originalTags;
+
+                    function enableSaveButton() {
+                        saveButton.disabled = false;
+                        saveButton.classList.add('active');
+                    }
+
+                    titleElement.addEventListener('input', enableSaveButton);
+                    textElement.addEventListener('input', enableSaveButton);
+
+                    // Add functionality to remove tags
+                    tagsContainer.addEventListener('click', function (e) {
+                        if (e.target.classList.contains('remove-tag')) {
+                            const tagElement = e.target.closest('.tag');
+                            tagElement.remove();
+                            enableSaveButton();
+                        }
+                    });
+
+                    // Add functionality to add new tags
+                    addTagInput.addEventListener('keypress', function (e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const newTagName = this.value.trim();
+                            if (newTagName) {
+                                const newTag = document.createElement('span');
+                                newTag.className = 'tag';
+                                newTag.setAttribute('data-tag-name', newTagName);
+                                newTag.innerHTML = `🏷️ ${newTagName}<span class="remove-tag">❌</span>`;
+                                tagsContainer.appendChild(newTag);
+                                this.value = '';
+                                enableSaveButton();
+                            }
+                        }
+                    });
+
+                    // Add input event listener to enable save button when typing in the add tag input
+                    addTagInput.addEventListener('input', enableSaveButton);
+
+                    cancelButton.addEventListener('click', function () {
+                        titleElement.textContent = originalTitle;
+                        textElement.innerHTML = originalText;
+                        tagsContainer.innerHTML = originalTags;
+                        addTagInput.value = '';
+                        saveButton.disabled = true;
+                        saveButton.classList.remove('active');
+                    });
+
+                    view.addEventListener('focusin', function () {
+                        originalTitle = titleElement.textContent;
+                        originalText = textElement.innerHTML;
+                        originalTags = tagsContainer.innerHTML;
+                    }, { once: true });
+
+                    form.addEventListener('submit', function (e) {
+                        e.preventDefault(); // Prevent default form submission
+                        const titleInput = form.querySelector('input[name="Title"]');
+                        const detailInput = form.querySelector('input[name="Detail"]');
+                        const tagsInput = form.querySelector('input[name="Tags"]');
+
+                        titleInput.value = titleElement.textContent;
+                        detailInput.value = textElement.innerHTML;
+                        const tags = Array.from(tagsContainer.querySelectorAll('.tag'))
+                            .map(tag => tag.getAttribute('data-tag-name'))
+                            .filter(tag => tag); // Filter out any null or undefined values
+                        tagsInput.value = tags.length > 0 ? tags.join(',') : ''; // Set to empty string if no tags
+
+                        // Include the tag being typed in the add tag input
+                        if (addTagInput.value.trim()) {
+                            tagsInput.value += (tagsInput.value ? ',' : '') + addTagInput.value.trim();
+                        }
+
+                        form.submit();
+                    });
+                });
+            }
+
+            // Call the function to set up note editing
+            handleNoteEdit();
+
+
+            // Modify the existing code for handling note items
+            document.querySelectorAll('.note-item').forEach(item => {
+                item.addEventListener('click', function () {
+                    const noteId = this.getAttribute('data-note');
+                    viewNoteDetails(noteId);
+                });
+            });
+
+            // Make sure this function is defined correctly
+            function viewNoteDetails(noteId) {
+                // Hide all note views
+                document.querySelectorAll('.note-view').forEach(view => {
+                    view.style.display = 'none';
+                });
+
+                // Show the selected note view
+                const selectedNote = document.querySelector(`.note-view[data-note="${noteId}"]`);
+                if (selectedNote) {
+                    selectedNote.style.display = 'block';
+                    document.querySelector('.blank-state').style.display = 'none';
+                    document.querySelector('.note-content').style.display = 'block';
+                } else {
+                    console.error('Note not found:', noteId);
+                }
+
+                // Update active state of note items
+                document.querySelectorAll('.note-item').forEach(item => {
+                    item.classList.toggle('active', item.getAttribute('data-note') === noteId);
+                });
+
+                // Update URL without navigating
+                history.pushState(null, '', `/Notes/${noteId}`);
+            }
+
+            // Add a new function to handle URL changes
+            function handleUrlChange() {
+                const path = window.location.pathname;
+                const match = path.match(/^\/Notes\/(\d+)$/);
+                if (match) {
+                    const noteId = match[1];
+                    viewNoteDetails(noteId);
+                }
+            }
+
+            // Add an event listener for the popstate event
+            window.addEventListener('popstate', handleUrlChange);
+
+            // Display the first note by default if available
+            const firstNote = document.querySelector('.note-item');
+            if (firstNote) {
+                const firstNoteId = firstNote.getAttribute('data-note');
+                displayNoteContent(firstNoteId);
+            }
+
+            // Modify the create new note button handler
+            const createNoteBtn = document.querySelector('.create-note-btn');
+            if (createNoteBtn) {
+                createNoteBtn.addEventListener('click', () => {
+                    document.querySelectorAll('.note-view').forEach(view => {
+                        view.style.display = 'none';
+                    });
+
+                    const blankState = document.querySelector('.blank-state');
+                    if (blankState) {
+                        blankState.style.display = 'block';
+                        blankState.classList.add('active');
+                    }
+
+                    const noteContent = document.querySelector('.note-content');
+                    if (noteContent) noteContent.style.display = 'none';
+
+                    document.querySelectorAll('.note-item.active').forEach(note => {
+                        note.classList.remove('active');
+                    });
+
+                    const addNoteForm = document.getElementById('addNoteForm');
+                    if (addNoteForm) addNoteForm.reset();
+                    checkNewNoteChanges();
+
+                    const titleInput = document.querySelector('.title-input');
+                    if (titleInput) titleInput.focus();
+                });
+            }
+
+            // Handle New Note Form
+            const addNoteForm = document.getElementById('addNoteForm');
+            if (addNoteForm) {
+                const newNoteTitle = addNoteForm.querySelector('[name="Title"]');
+                const newNoteTags = addNoteForm.querySelector('[name="Tags"]');
+                const newNoteContent = document.getElementById('noteDetail');
+                const newNoteSaveButton = addNoteForm.querySelector('.save-button');
+
+                function checkNewNoteChanges() {
+                    const hasChanges = (newNoteTitle && newNoteTitle.value.trim() !== '') &&
+                        (newNoteContent && newNoteContent.textContent.trim() !== '');
+                    if (newNoteSaveButton) {
+                        newNoteSaveButton.disabled = !hasChanges;
+                        newNoteSaveButton.classList.toggle('active', hasChanges);
+                    }
+                }
+
+                if (newNoteTitle) newNoteTitle.addEventListener('input', checkNewNoteChanges);
+                if (newNoteContent) newNoteContent.addEventListener('input', checkNewNoteChanges);
+
+                addNoteForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    const hiddenDetail = document.getElementById('hiddenDetail');
+                    if (hiddenDetail && newNoteContent) {
+                        hiddenDetail.value = newNoteContent.innerHTML;
+                    }
+
+                    fetch(this.action, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams(new FormData(this))
+                    }).then(response => {
+                        if (response.ok) {
+                            closeModal('addNoteModal');
+                            window.location.reload();
+                        }
+                    }).catch(error => {
+                        console.error('Error:', error);
+                    });
+                });
+            } else {
+                console.error("Add note form not found");
+            }
+            // Call handleUrlChange after DOMContentLoaded
+            handleUrlChange();
+        });
+    </script>
+</body>
+</html>
+

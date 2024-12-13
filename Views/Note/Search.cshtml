@@ -1,0 +1,162 @@
+﻿@model SearchResultViewModel
+@{
+    ViewData["Title"] = "Search Results";
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scribbly - Search Results</title>
+    <link rel="stylesheet" href="~/css/homePage.css">
+    <style>
+        .search-results {
+            padding: 20px;
+        }
+
+        .search-result-item {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+            .search-result-item:hover {
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            }
+
+        .search-result-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .search-result-content {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .search-result-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .search-result-tag {
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+            color: #666;
+        }
+
+        .archived-status {
+            background-color: #ffd700;
+            color: #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="pencil-icon">✏️</div>
+            <span class="logo-text">Scribbly</span>
+        </div>
+        <a href="/notes" class="nav-item">
+            <img src="~/img/home.png" alt="Ana Sayfa" class="icon" /> Tüm Notlar
+        </a>
+        <a href="/archive" class="nav-item">
+            <img src="~/img/save-file.png" alt="Arşiv" class="icon" /> Arşivlenmiş Notlar
+        </a>
+        <div class="tags-section">
+            <div class="tags-title">Etiketler</div>
+            @foreach (var tag in Model.UniqueTags)
+            {
+                <a href="#" class="nav-item">
+                    <img src="~/img/tag.png" alt="Etiket" class="icon" /> @tag.Name
+                </a>
+            }
+        </div>
+    </aside>
+    <main class="main-content">
+        <header class="header">
+            <form asp-controller="Note" asp-action="Search" method="get" class="search-bar">
+                <span>🔍</span>
+                <input type="text" name="searchTerm" class="search-input" placeholder="Başlığa, içeriğe veya etiketlere göre ara..." value="@Model.SearchTerm">
+                <button type="submit" class="search-button">Ara</button>
+            </form>
+            <div class="user-profile-dropdown">
+                <button class="user-profile-button">
+                    <span class="user-name">@User.Identity.Name</span>
+                </button>
+                <div class="dropdown-content">
+                    <a asp-controller="User" asp-action="Logout" class="dropdown-item">Çıkış Yap</a>
+                </div>
+            </div>
+        </header>
+        <div class="search-results">
+            <h2>Search Results for "@Model.SearchTerm"</h2>
+            @if (Model.Notes.Any())
+            {
+                <div class="notes-list">
+                    @foreach (var note in Model.Notes)
+                    {
+                        <div class="note-item search-result-item" data-note="@note.Id" onclick="viewNoteDetails('@note.Id', @note.IsArchive.ToString().ToLower())">
+                            <div class="search-result-title">
+                                @note.Title
+                                @if (note.IsArchive)
+                                {
+                                    <span class="archived-status">Archived</span>
+                                }
+                            </div>
+                            <div class="search-result-content">@Html.Raw(note.Detail.Length > 200 ? note.Detail.Substring(0, 200) + "..." : note.Detail)</div>
+                            <div class="search-result-tags">
+                                @foreach (var noteTag in note.NoteTags)
+                                {
+                                    <span class="search-result-tag">
+                                        <img src="~/img/tag.png" alt="Etiket" class="icon" /> @noteTag.Tag.Name
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="no-results">No results found for "@Model.SearchTerm"</div>
+            }
+        </div>
+    </main>
+
+    
+    <script>
+        function viewNoteDetails(noteId, isArchived) {
+            if (isArchived) {
+                window.location.href = `/Archive/${noteId}`;
+            } else {
+                window.location.href = `/Notes/${noteId}`;
+            }
+        }
+    </script>
+</body>
+</html>
+
